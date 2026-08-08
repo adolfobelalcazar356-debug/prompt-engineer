@@ -2,5 +2,6 @@
   "version": "0.1.0",
   "tag": "v0.1.0",
   "asset": "prompt-engineer-skill-v0.1.0.zip",
-  "verified_from_commit": "9166d62cf0e6cc920688081772b4d294b8d4d87d"
+  "stable_asset": "prompt-engineer-skill.zip",
+  "verified_from_commit": "49573135dc4481d084fe66ebb174029b6dc49406"
 }
