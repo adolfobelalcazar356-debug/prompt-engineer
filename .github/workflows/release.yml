@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -35,6 +37,38 @@ jobs:
           echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
           echo "asset=prompt-engineer-skill-v${VERSION}.zip" >> "$GITHUB_OUTPUT"
           echo "stable_asset=prompt-engineer-skill.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Validate version metadata
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          version = Path("VERSION").read_text(encoding="utf-8").strip()
+          if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+              raise SystemExit(f"VERSION must be SemVer X.Y.Z; got {version!r}")
+
+          changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
+          if f"## {version} -" not in changelog:
+              raise SystemExit(f"CHANGELOG.md has no section for {version}")
+          print(f"Version metadata valid for {version}.")
+          PY
+
+      - name: Guard released version against drift
+        shell: bash
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if git rev-parse --verify "refs/tags/${TAG}" >/dev/null 2>&1; then
+            if ! git diff --quiet "$TAG" -- prompt-engineer; then
+              echo "::error::The canonical skill changed after ${TAG} was created. Bump VERSION and CHANGELOG before releasing new skill content."
+              git diff --name-only "$TAG" -- prompt-engineer
+              exit 1
+            fi
+            echo "Canonical skill matches existing ${TAG}."
+          else
+            echo "${TAG} does not exist yet; release may proceed."
+          fi
 
       - name: Inspect existing release
         id: release
@@ -98,20 +132,50 @@ jobs:
           print("Canonical package verified: exactly 7 files.")
           PY
 
-      - name: Build installable ZIPs
+      - name: Build and verify downloadable ZIPs
         if: steps.release.outputs.asset_exists == 'false' || steps.release.outputs.stable_asset_exists == 'false'
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
           import shutil
+          from zipfile import ZIP_DEFLATED, ZipFile
 
           version = Path("VERSION").read_text(encoding="utf-8").strip()
-          archive = f"prompt-engineer-skill-v{version}"
-          versioned = Path(shutil.make_archive(archive, "zip", root_dir=".", base_dir="prompt-engineer"))
+          versioned = Path(f"prompt-engineer-skill-v{version}.zip")
           stable = Path("prompt-engineer-skill.zip")
+
+          with ZipFile(versioned, "w", compression=ZIP_DEFLATED) as zf:
+              for path in sorted(Path("prompt-engineer").rglob("*")):
+                  if path.is_file():
+                      zf.write(path, path.as_posix())
+              zf.write("LICENSE", "LICENSE")
+
           shutil.copyfile(versioned, stable)
-          print(f"Created {versioned.name} and {stable.name}")
+
+          expected_skill_files = {
+              "SKILL.md",
+              "references/software-engineering.md",
+              "references/project-context.md",
+              "adapters/opencode.md",
+              "adapters/codex.md",
+              "adapters/claude-code.md",
+              "examples/examples.md",
+          }
+          expected_zip_files = {"LICENSE"} | {
+              f"prompt-engineer/{name}" for name in expected_skill_files
+          }
+
+          for archive in (versioned, stable):
+              with ZipFile(archive) as zf:
+                  actual = {name.rstrip("/") for name in zf.namelist() if not name.endswith("/")}
+              if actual != expected_zip_files:
+                  raise SystemExit(
+                      f"Unexpected contents in {archive}: "
+                      f"missing={sorted(expected_zip_files - actual)} "
+                      f"extra={sorted(actual - expected_zip_files)}"
+                  )
+              print(f"Verified {archive}: 7 skill files + LICENSE.")
           PY
 
       - name: Prepare release notes
@@ -143,8 +207,8 @@ jobs:
           ASSET="${{ steps.version.outputs.asset }}"
           STABLE_ASSET="${{ steps.version.outputs.stable_asset }}"
           gh release create "$TAG" \
-            "$ASSET#Installable Prompt Engineer skill (versioned)" \
-            "$STABLE_ASSET#Installable Prompt Engineer skill (latest alias)" \
+            "$ASSET#Prompt Engineer skill + MIT license (versioned)" \
+            "$STABLE_ASSET#Prompt Engineer skill + MIT license (latest alias)" \
             --target "$GITHUB_SHA" \
             --title "Prompt Engineer $TAG" \
             --notes-file release-notes.md
@@ -155,10 +219,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          gh release upload "${{ steps.version.outputs.tag }}" \
-            "${{ steps.version.outputs.asset }}#Installable Prompt Engineer skill (versioned)" \
-            "${{ steps.version.outputs.stable_asset }}#Installable Prompt Engineer skill (latest alias)" \
-            --clobber
+          TAG="${{ steps.version.outputs.tag }}"
+          if [ "${{ steps.release.outputs.asset_exists }}" = "false" ]; then
+            gh release upload "$TAG" \
+              "${{ steps.version.outputs.asset }}#Prompt Engineer skill + MIT license (versioned)"
+          fi
+          if [ "${{ steps.release.outputs.stable_asset_exists }}" = "false" ]; then
+            gh release upload "$TAG" \
+              "${{ steps.version.outputs.stable_asset }}#Prompt Engineer skill + MIT license (latest alias)"
+          fi
 
       - name: Verify published release and assets
         env:
