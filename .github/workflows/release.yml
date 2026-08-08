@@ -1,0 +1,127 @@
+name: release-skill
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - VERSION
+      - CHANGELOG.md
+      - prompt-engineer/**
+      - .github/workflows/release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: echo "version=$(tr -d '\r\n' < VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether release already exists
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh release view "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run contract tests
+        if: steps.release.outputs.exists == 'false'
+        run: python -m unittest discover -s tests -v
+
+      - name: Verify canonical seven-file package
+        if: steps.release.outputs.exists == 'false'
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          root = Path("prompt-engineer")
+          expected = {
+              "SKILL.md",
+              "references/software-engineering.md",
+              "references/project-context.md",
+              "adapters/opencode.md",
+              "adapters/codex.md",
+              "adapters/claude-code.md",
+              "examples/examples.md",
+          }
+          actual = {
+              path.relative_to(root).as_posix()
+              for path in root.rglob("*")
+              if path.is_file()
+          }
+          if actual != expected:
+              missing = sorted(expected - actual)
+              extra = sorted(actual - expected)
+              raise SystemExit(f"Canonical package mismatch. Missing={missing}; Extra={extra}")
+          print("Canonical package verified: exactly 7 files.")
+          PY
+
+      - name: Build installable ZIP
+        if: steps.release.outputs.exists == 'false'
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil
+
+          version = Path("VERSION").read_text(encoding="utf-8").strip()
+          archive = f"prompt-engineer-skill-v{version}"
+          shutil.make_archive(archive, "zip", root_dir=".", base_dir="prompt-engineer")
+          print(f"Created {archive}.zip")
+          PY
+
+      - name: Prepare release notes
+        if: steps.release.outputs.exists == 'false'
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          version = Path("VERSION").read_text(encoding="utf-8").strip()
+          text = Path("CHANGELOG.md").read_text(encoding="utf-8")
+          marker = f"## {version} -"
+          start = text.find(marker)
+          if start == -1:
+              raise SystemExit(f"No CHANGELOG section found for {version}")
+          next_section = text.find("\n## ", start + len(marker))
+          section = text[start: next_section if next_section != -1 else len(text)].strip()
+          Path("release-notes.md").write_text(section + "\n", encoding="utf-8")
+          print(section)
+          PY
+
+      - name: Create GitHub release
+        if: steps.release.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release create "v${VERSION}" \
+            "prompt-engineer-skill-v${VERSION}.zip#Installable Prompt Engineer skill" \
+            --target "$GITHUB_SHA" \
+            --title "Prompt Engineer v${VERSION}" \
+            --notes-file release-notes.md
+
+      - name: Report existing release
+        if: steps.release.outputs.exists == 'true'
+        run: echo "Release v${{ steps.version.outputs.version }} already exists; nothing to publish."
