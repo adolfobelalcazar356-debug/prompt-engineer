@@ -15,5 +15,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - name: Run contract tests
         run: python -m unittest discover -s tests -v
+
+      - name: Verify GitHub CLI Agent Skills support
+        shell: bash
+        run: |
+          gh --version
+          gh skill --help >/dev/null
+
+      - name: Validate Agent Skills publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh skill publish --dry-run .

@@ -1,6 +1,7 @@
 ---
 name: prompt-engineer
 description: Use when a user needs a request optimized, audited, explained, or compared before handing it to OpenCode, Codex, Claude Code, or another AI agent, especially when scope, context, requirements, or verification are unclear.
+license: MIT
 ---
 
 # Prompt Engineer
@@ -17,19 +18,19 @@ The MVP uses **explicit invocation** and a **handoff** model: optimize or audit 
 
 ## Modes
 
-- `optimize` — **default**. Return only the final prompt.
-- `audit` — return a compact readiness review: strengths, blocking gaps, risks, and recommended route.
-- `explain` — `optimize` output variant: final prompt plus brief reasons for material changes.
-- `compare` — `optimize` output variant: original, optimized, and concise delta. Any scores are heuristic.
+- `optimize` (default): Return only the final prompt.
+- `audit`: Return a compact readiness review: strengths, blocking gaps, risks, and recommended route.
+- `explain`: `optimize` output variant: final prompt plus brief reasons for material changes.
+- `compare`: `optimize` output variant: original, optimized, and concise delta. Any scores are heuristic.
 
 ## One lightweight routing decision
 
 Determine only what changes the output: intent, complexity, critical missing context, and route.
 
 Complexity:
-- **SIMPLE** — localized, clear, low blast radius.
-- **BOUNDED** — clear goal with meaningful implementation risk or several affected areas.
-- **COMPLEX** — architectural impact, multiple independent deliverables, or unresolved product/technical decisions.
+- **SIMPLE**: localized, clear, low blast radius.
+- **BOUNDED**: clear goal with meaningful implementation risk or several affected areas.
+- **COMPLEX**: architectural impact, multiple independent deliverables, or unresolved product/technical decisions.
 
 Routes: `EXECUTE_DIRECTLY`, `EXPLORE_FIRST`, `PLAN_FIRST`, `SPEC_FIRST`, `ASK_USER`.
 

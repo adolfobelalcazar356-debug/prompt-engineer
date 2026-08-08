@@ -39,6 +39,7 @@ class SkillContractTests(unittest.TestCase):
         self.assertIsNotNone(match, "SKILL.md must start with YAML frontmatter")
         frontmatter = match.group(1)
         self.assertRegex(frontmatter, r"(?m)^name:\s*prompt-engineer\s*$")
+        self.assertRegex(frontmatter, r"(?m)^license:\s*MIT\s*$")
         description = re.search(r"(?m)^description:\s*(.+)$", frontmatter)
         self.assertIsNotNone(description)
         self.assertTrue(description.group(1).startswith("Use when"))
