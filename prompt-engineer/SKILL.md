@@ -1,6 +1,7 @@
 ---
 name: prompt-engineer
 description: Use when a user needs a request optimized, audited, explained, or compared before handing it to OpenCode, Codex, Claude Code, or another AI agent, especially when scope, context, requirements, or verification are unclear.
+license: MIT
 ---
 
 # Prompt Engineer
@@ -31,7 +32,7 @@ Complexity:
 - **BOUNDED** â€” clear goal with meaningful implementation risk or several affected areas.
 - **COMPLEX** â€” architectural impact, multiple independent deliverables, or unresolved product/technical decisions.
 
-Routes: `EXECUTE_DIRECTLY`, `EXPLORE_FIRST`, `PLAN_FIRST`, `SPEC_FIRST`, `ASK_USER`.
+Routes: `EXECUTE_DIRECTLy`, `EXPLORE_FIRST`, `PLAN_FIRST`, `SPEC_FIRST`, `ASK_USER`.
 
 ### SIMPLE fast path
 
@@ -45,25 +46,4 @@ For software tasks, load [references/software-engineering.md](references/softwar
 
 ## Questions
 
-**Inspect before asking.** Never ask for information reliably discoverable from the repository or supplied artifacts.
-
-Questions are **normally zero** and **maximum two**. Ask only for a critical gap where different answers materially change scope, safety, data impact, or the requested outcome. Prefer one precise question over a questionnaire.
-
-## Final readiness check
-
-Before returning BOUNDED/COMPLEX output, confirm the goal is clear enough, scope is bounded, critical context is available, success can be recognized, verification is possible, and no critical ambiguity remains. SIMPLE work gets only a quick sanity check.
-
-## Target adapter
-
-Load only the relevant adapter when the destination is known:
-- OpenCode: [adapters/opencode.md](adapters/opencode.md)
-- Codex: [adapters/codex.md](adapters/codex.md)
-- Claude Code: [adapters/claude-code.md](adapters/claude-code.md)
-
-Adapters modify only host-specific packaging/invocation or execution emphasis; they do not replace the core.
-
-## Output discipline
-
-For default `optimize`, output only the final prompt: no generic preamble, hidden analysis, scoring, or self-congratulation. Make required behavior distinguishable from optional guidance. Keep destructive or irreversible effects explicit rather than softened.
-
-For compact examples and output shapes, load [examples/examples.md](examples/examples.md).
+$–ç7V7B&Vf÷&R6¶–ærâ¢¢æWfW"6²f÷"–æf÷&ÖF–öâ&VÆ–&Ç’F—66÷fW&&ÆRg&öÒF†R&W÷6—F÷'’÷"7WÆ–VB'F–f7G2à ¥VW7F–öç2&R¢¦æ÷&ÖÆÇ’¦W&ò¢¢æB¢¤Ö†–×VÒGvò¢¢â6²öæÇ’f÷"7&—F–6Âvv†W&RF–ffW&VçBç7vW'2ÖFW&–ÆÇ’6†ævR66÷RÂ6fWG’ÂFF–×7BÂ÷"F†R&WVW7FVB÷WF6öÖRâ&VfW"öæR&V6—6RVW7F–öâ÷fW"VW7F–öææ—&Rà ¢22f–æÂ&VF–æW726†V6° ¤&Vf÷&R&WGW&æ–ær$õTäDTBô4ôÕÄU‚÷WGWBÂ6öæf—&ÒF†RvöÂ—26ÆV"Væ÷Vv‚Â66÷R—2&÷VæFVBÂ7&—F–6Â6öçFW‡B—2f–Æ&ÆRÂ7V66W726â&R&V6övæ—¦VBÂfW&–f–6F–öâ—2÷76–&ÆRÂæBæò7&—F–6ÂÖ&–wV—G’&VÖ–ç2â4”ÕÄRv÷&²vWG2öæÇ’V–6²6æ—G’6†V6²à ¢22F&vWBFFW  ¤ÆöBöæÇ’F†R&VÆWfçBFFW"v†VâF†RFW7F–æF–öâ—2¶æ÷vã ¢Ò÷Vä6öFS¢¶FFW'2ö÷Væ6öFRæÖEÒ†FFW'2ö÷Væ6öFRæÖB¢Ò6öFWƒ¢¶FFW'2ö6öFW‚æÖEÒ†FFW'2ö6öFW‚æÖB¢Ò6ÆVFR6öFS¢¶FFW'2ö6ÆVFRÖ6öFRæÖEÒ†FFW'2ö6ÆVFRÖ6öFRæÖB ¤FFW'2ÖöF–g’öæÇ’†÷7B×7V6–f–26¶v–ærö–çfö6F–öâ÷"W†V7WF–öâV×†6—3²F†W’Fòæ÷B&WÆ6RF†R6÷&Rà ¢22÷WGWBF—66—Æ–æP ¤f÷"FVfVÇB÷F–Ö—¦VÂ÷WGWBöæÇ’F†Rf–æÂ&ö×C¢æòvVæW&–2&VÖ&ÆRÂ†–FFVâæÇ—6—2Â66÷&–ærÂ÷"6VÆbÖ6öæw&GVÆF–öââÖ¶R&WV—&VB&V†f–÷"F—7F–æwV—6†&ÆRg&öÒ÷F–öæÂwV–Fæ6Râ¶VWFW7G'V7F—fR÷"—'&WfW'6–&ÆRVffV7G2W‡Æ–6—B&F†W"F†â6ögFVæVBà ¤f÷"6ö×7BW†×ÆW2æB÷WGWB6†W2ÂÆöB¶W†×ÆW2öW†×ÆW2æÖEÒ†W†×ÆW2öW†×ÆW2æÖB’à
