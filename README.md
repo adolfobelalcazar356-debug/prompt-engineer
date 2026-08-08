@@ -4,6 +4,79 @@ Portable Agent Skill for turning user intent into compact, bounded, and verifiab
 
 Prompt Engineer is designed for **OpenAI Codex**, **OpenCode**, and **Claude Code**. It specializes in software-engineering work while remaining useful for general research, analysis, and writing prompts.
 
+## Quick start — about 60 seconds
+
+Clone the repository once:
+
+```bash
+git clone --depth 1 https://github.com/adolfobelalcazar356-debug/prompt-engineer.git prompt-engineer-repo
+```
+
+### Codex or OpenCode
+
+A single personal install under `.agents/skills` can be discovered by both Codex and OpenCode.
+
+**macOS / Linux**
+
+```bash
+mkdir -p ~/.agents/skills
+cp -R prompt-engineer-repo/prompt-engineer ~/.agents/skills/prompt-engineer
+```
+
+**Windows PowerShell**
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\.agents\skills" | Out-Null
+Copy-Item -Recurse -Force ".\prompt-engineer-repo\prompt-engineer" "$HOME\.agents\skills\prompt-engineer"
+```
+
+Invoke it in **Codex** with:
+
+```text
+$prompt-engineer
+```
+
+Invoke it in **OpenCode v2** with:
+
+```text
+/prompt-engineer
+```
+
+### Claude Code
+
+**macOS / Linux**
+
+```bash
+mkdir -p ~/.claude/skills
+cp -R prompt-engineer-repo/prompt-engineer ~/.claude/skills/prompt-engineer
+```
+
+**Windows PowerShell**
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\.claude\skills" | Out-Null
+Copy-Item -Recurse -Force ".\prompt-engineer-repo\prompt-engineer" "$HOME\.claude\skills\prompt-engineer"
+```
+
+Invoke it with:
+
+```text
+/prompt-engineer
+```
+
+After installation, the temporary `prompt-engineer-repo` clone can be deleted. The installed `prompt-engineer` directory is self-contained.
+
+### Try it
+
+```text
+$prompt-engineer
+I have two existing Git repositories, a React frontend and a FastAPI backend.
+I want to combine them into one repository while preserving both Git histories.
+Give the target agent a safe, verifiable instruction.
+```
+
+For OpenCode or Claude Code, replace `$prompt-engineer` with `/prompt-engineer`.
+
 ## What it does
 
 Prompt Engineer does more than rewrite wording. It can:
@@ -42,7 +115,7 @@ The default behavior is **handoff-first**: the skill produces the optimized prom
 └── LICENSE
 ```
 
-## Installation
+## Installation details
 
 ### Codex
 
@@ -92,7 +165,11 @@ mkdir -p .opencode/skills
 cp -R prompt-engineer .opencode/skills/prompt-engineer
 ```
 
-Then ask OpenCode explicitly to use the `prompt-engineer` skill for the request you want optimized.
+In OpenCode v2, invoke explicitly with:
+
+```text
+/prompt-engineer
+```
 
 Official reference: https://opencode.ai/v2/docs/skills
 
@@ -113,9 +190,9 @@ Invoke it with:
 
 Official reference: https://code.claude.com/docs/en/skills
 
-### Windows PowerShell example
+### Windows PowerShell examples
 
-From the root of this repository, to install Prompt Engineer globally for Codex:
+From the root of this repository, to install Prompt Engineer globally for Codex and OpenCode:
 
 ```powershell
 New-Item -ItemType Directory -Force "$HOME\.agents\skills" | Out-Null
