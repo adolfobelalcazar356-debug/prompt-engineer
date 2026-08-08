@@ -4,7 +4,11 @@ Portable Agent Skill for turning user intent into compact, bounded, and verifiab
 
 Prompt Engineer is designed for **OpenAI Codex**, **OpenCode**, and **Claude Code**. It specializes in software-engineering work while remaining useful for general research, analysis, and writing prompts.
 
-**Prefer a ZIP?** Go to the [latest GitHub Release](https://github.com/adolfobelalcazar356-debug/prompt-engineer/releases/latest) and download the versioned `prompt-engineer-skill-v<version>.zip`. Release ZIPs contain only the canonical seven-file skill package.
+## Download
+
+**[Download the latest installable skill ZIP](https://github.com/adolfobelalcazar356-debug/prompt-engineer/releases/latest/download/prompt-engineer-skill.zip)**
+
+The download contains only the canonical seven-file `prompt-engineer` skill package. For versioned downloads and release notes, see the [latest GitHub Release](https://github.com/adolfobelalcazar356-debug/prompt-engineer/releases/latest).
 
 ## Quick start — about 60 seconds
 
