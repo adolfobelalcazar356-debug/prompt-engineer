@@ -34,6 +34,7 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
           echo "asset=prompt-engineer-skill-v${VERSION}.zip" >> "$GITHUB_OUTPUT"
+          echo "stable_asset=prompt-engineer-skill.zip" >> "$GITHUB_OUTPUT"
 
       - name: Inspect existing release
         id: release
@@ -43,25 +44,33 @@ jobs:
         run: |
           TAG="${{ steps.version.outputs.tag }}"
           ASSET="${{ steps.version.outputs.asset }}"
+          STABLE_ASSET="${{ steps.version.outputs.stable_asset }}"
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "release_exists=true" >> "$GITHUB_OUTPUT"
-            if gh release view "$TAG" --json assets --jq '.assets[].name' | grep -Fxq "$ASSET"; then
+            ASSETS="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
+            if printf '%s\n' "$ASSETS" | grep -Fxq "$ASSET"; then
               echo "asset_exists=true" >> "$GITHUB_OUTPUT"
             else
               echo "asset_exists=false" >> "$GITHUB_OUTPUT"
             fi
+            if printf '%s\n' "$ASSETS" | grep -Fxq "$STABLE_ASSET"; then
+              echo "stable_asset_exists=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "stable_asset_exists=false" >> "$GITHUB_OUTPUT"
+            fi
           else
             echo "release_exists=false" >> "$GITHUB_OUTPUT"
             echo "asset_exists=false" >> "$GITHUB_OUTPUT"
+            echo "stable_asset_exists=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run contract tests
-        if: steps.release.outputs.asset_exists == 'false'
+        if: steps.release.outputs.asset_exists == 'false' || steps.release.outputs.stable_asset_exists == 'false'
         run: python -m unittest discover -s tests -v
 
       - name: Verify canonical seven-file package
-        if: steps.release.outputs.asset_exists == 'false'
+        if: steps.release.outputs.asset_exists == 'false' || steps.release.outputs.stable_asset_exists == 'false'
         shell: bash
         run: |
           python - <<'PY'
@@ -89,8 +98,8 @@ jobs:
           print("Canonical package verified: exactly 7 files.")
           PY
 
-      - name: Build installable ZIP
-        if: steps.release.outputs.asset_exists == 'false'
+      - name: Build installable ZIPs
+        if: steps.release.outputs.asset_exists == 'false' || steps.release.outputs.stable_asset_exists == 'false'
         shell: bash
         run: |
           python - <<'PY'
@@ -99,8 +108,10 @@ jobs:
 
           version = Path("VERSION").read_text(encoding="utf-8").strip()
           archive = f"prompt-engineer-skill-v{version}"
-          shutil.make_archive(archive, "zip", root_dir=".", base_dir="prompt-engineer")
-          print(f"Created {archive}.zip")
+          versioned = Path(shutil.make_archive(archive, "zip", root_dir=".", base_dir="prompt-engineer"))
+          stable = Path("prompt-engineer-skill.zip")
+          shutil.copyfile(versioned, stable)
+          print(f"Created {versioned.name} and {stable.name}")
           PY
 
       - name: Prepare release notes
@@ -130,31 +141,37 @@ jobs:
         run: |
           TAG="${{ steps.version.outputs.tag }}"
           ASSET="${{ steps.version.outputs.asset }}"
+          STABLE_ASSET="${{ steps.version.outputs.stable_asset }}"
           gh release create "$TAG" \
-            "$ASSET#Installable Prompt Engineer skill" \
+            "$ASSET#Installable Prompt Engineer skill (versioned)" \
+            "$STABLE_ASSET#Installable Prompt Engineer skill (latest alias)" \
             --target "$GITHUB_SHA" \
             --title "Prompt Engineer $TAG" \
             --notes-file release-notes.md
 
-      - name: Upload missing release asset
-        if: steps.release.outputs.release_exists == 'true' && steps.release.outputs.asset_exists == 'false'
+      - name: Repair missing release assets
+        if: steps.release.outputs.release_exists == 'true' && (steps.release.outputs.asset_exists == 'false' || steps.release.outputs.stable_asset_exists == 'false')
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           gh release upload "${{ steps.version.outputs.tag }}" \
-            "${{ steps.version.outputs.asset }}#Installable Prompt Engineer skill" \
+            "${{ steps.version.outputs.asset }}#Installable Prompt Engineer skill (versioned)" \
+            "${{ steps.version.outputs.stable_asset }}#Installable Prompt Engineer skill (latest alias)" \
             --clobber
 
-      - name: Verify published release and asset
+      - name: Verify published release and assets
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           TAG="${{ steps.version.outputs.tag }}"
           ASSET="${{ steps.version.outputs.asset }}"
+          STABLE_ASSET="${{ steps.version.outputs.stable_asset }}"
           gh release view "$TAG" --json tagName,isDraft,isPrerelease,assets,url
-          gh release view "$TAG" --json assets --jq '.assets[].name' | grep -Fxq "$ASSET"
+          ASSETS="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
+          printf '%s\n' "$ASSETS" | grep -Fxq "$ASSET"
+          printf '%s\n' "$ASSETS" | grep -Fxq "$STABLE_ASSET"
 
       - name: Record verified release manifest
         shell: bash
@@ -162,12 +179,14 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           TAG="${{ steps.version.outputs.tag }}"
           ASSET="${{ steps.version.outputs.asset }}"
+          STABLE_ASSET="${{ steps.version.outputs.stable_asset }}"
           mkdir -p .github/release-manifests
           cat > ".github/release-manifests/${TAG}.json" <<EOF
           {
             "version": "${VERSION}",
             "tag": "${TAG}",
             "asset": "${ASSET}",
+            "stable_asset": "${STABLE_ASSET}",
             "verified_from_commit": "${GITHUB_SHA}"
           }
           EOF
@@ -175,6 +194,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ".github/release-manifests/${TAG}.json"
           if ! git diff --cached --quiet; then
-            git commit -m "chore: record verified ${TAG} release"
+            git commit -m "chore: record verified ${TAG} release assets"
             git push origin HEAD:main
           fi
