@@ -6,11 +6,25 @@ Prompt Engineer is designed for **OpenAI Codex**, **OpenCode**, and **Claude Cod
 
 ## Download
 
-**[Download the latest installable skill ZIP](https://github.com/adolfobelalcazar356-debug/prompt-engineer/releases/latest/download/prompt-engineer-skill.zip)**
+**[Download Prompt Engineer ZIP](https://github.com/adolfobelalcazar356-debug/prompt-engineer/releases/latest/download/prompt-engineer-skill.zip)**
 
-The download contains only the canonical seven-file `prompt-engineer` skill package. For versioned downloads and release notes, see the [latest GitHub Release](https://github.com/adolfobelalcazar356-debug/prompt-engineer/releases/latest).
+The release ZIP contains the canonical seven-file `prompt-engineer/` skill directory plus the top-level MIT `LICENSE`. For versioned downloads and release notes, see the [latest GitHub Release](https://github.com/adolfobelalcazar356-debug/prompt-engineer/releases/latest).
 
 ## Quick start — about 60 seconds
+
+### GitHub CLI (public preview)
+
+GitHub CLI 2.90+ includes `gh skill` in public preview. It can install Prompt Engineer directly into the host-specific location:
+
+```bash
+gh skill install adolfobelalcazar356-debug/prompt-engineer prompt-engineer --agent codex --scope user
+gh skill install adolfobelalcazar356-debug/prompt-engineer prompt-engineer --agent opencode --scope user
+gh skill install adolfobelalcazar356-debug/prompt-engineer prompt-engineer --agent claude-code --scope user
+```
+
+Use only the command for the agent you want. Because `gh skill` is a public-preview feature, the manual installation below remains the stable fallback.
+
+### Manual install for Codex or OpenCode
 
 Clone the repository once:
 
@@ -18,9 +32,7 @@ Clone the repository once:
 git clone --depth 1 https://github.com/adolfobelalcazar356-debug/prompt-engineer.git prompt-engineer-repo
 ```
 
-### Codex or OpenCode
-
-A single personal install under `.agents/skills` can be discovered by both Codex and OpenCode.
+A personal install under `.agents/skills` is portable across Codex and OpenCode.
 
 **macOS / Linux**
 
@@ -42,13 +54,19 @@ Invoke it in **Codex** with:
 $prompt-engineer
 ```
 
-Invoke it in **OpenCode v2** with:
+For **OpenCode stable**, explicitly ask OpenCode to load/use the skill, for example:
+
+```text
+Use the prompt-engineer skill to optimize this request: <your request>
+```
+
+For **OpenCode V2**, invoke it with:
 
 ```text
 /prompt-engineer
 ```
 
-### Claude Code
+### Manual install for Claude Code
 
 **macOS / Linux**
 
@@ -70,9 +88,11 @@ Invoke it with:
 /prompt-engineer
 ```
 
-After installation, the temporary `prompt-engineer-repo` clone can be deleted. The installed `prompt-engineer` directory is self-contained.
+After manual installation, the temporary `prompt-engineer-repo` clone can be deleted. The installed `prompt-engineer` directory is self-contained.
 
 ### Try it
+
+**Codex**
 
 ```text
 $prompt-engineer
@@ -81,7 +101,21 @@ I want to combine them into one repository while preserving both Git histories.
 Give the target agent a safe, verifiable instruction.
 ```
 
-For OpenCode or Claude Code, replace `$prompt-engineer` with `/prompt-engineer`.
+**OpenCode stable**
+
+```text
+Use the prompt-engineer skill to optimize this request:
+I have two existing Git repositories, a React frontend and a FastAPI backend.
+I want to combine them into one repository while preserving both Git histories.
+```
+
+**OpenCode V2 / Claude Code**
+
+```text
+/prompt-engineer
+I have two existing Git repositories, a React frontend and a FastAPI backend.
+I want to combine them into one repository while preserving both Git histories.
+```
 
 ## What it does
 
@@ -114,7 +148,7 @@ The default behavior is **handoff-first**: the skill produces the optimized prom
 │       ├── project-context.md
 │       └── software-engineering.md
 ├── evals/                           # Downstream evaluation cases/runbook
-├── tests/                           # Static contract tests
+├── tests/                           # Static contract/release tests
 ├── docs/ARCHITECTURE.md
 ├── ACKNOWLEDGMENTS.md
 ├── CONTRIBUTING.md
@@ -157,7 +191,7 @@ Official reference: https://developers.openai.com/codex/build-skills
 
 ### OpenCode
 
-OpenCode v2 natively discovers project skills under `.opencode/skills` and also supports `.agents/skills` and `.claude/skills` as compatibility locations. For a single install that also works with Codex, `.agents/skills` is a good portable choice.
+OpenCode stable discovers skills from `.opencode/skills`, `.agents/skills`, and `.claude/skills`. For a single install that also works with Codex, `.agents/skills` is the portable choice.
 
 ```bash
 mkdir -p .agents/skills
@@ -171,13 +205,17 @@ mkdir -p .opencode/skills
 cp -R prompt-engineer .opencode/skills/prompt-engineer
 ```
 
-In OpenCode v2, invoke explicitly with:
+**OpenCode stable:** ask OpenCode explicitly to use the `prompt-engineer` skill for the supplied request.
+
+**OpenCode V2:** invoke explicitly with:
 
 ```text
 /prompt-engineer
 ```
 
-Official reference: https://opencode.ai/v2/docs/skills
+Official stable reference: https://opencode.ai/docs/skills
+
+Official V2 reference: https://opencode.ai/v2/docs/skills
 
 ### Claude Code
 
@@ -251,17 +289,23 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the current architecture.
 
 ## Verification
 
-The repository's contract tests use only the Python standard library:
+Run the repository contract tests:
 
 ```bash
 python -m unittest discover -s tests -v
+```
+
+If GitHub CLI 2.90+ is available, validate the repository against the Agent Skills publishing checks without publishing:
+
+```bash
+gh skill publish --dry-run .
 ```
 
 The first downstream evaluation set contains six pressure cases: simple, debug, refactor-scope, complex, ambiguous-destructive, and explicit-destructive work. See [evals/README.md](evals/README.md).
 
 ## Status
 
-**MVP / early public release.** Static contract verification is included. Claims that Prompt Engineer improves downstream execution should be based on actual comparative runs, not inferred from the prompt text alone.
+**v0.1.x / early public release.** Static contract and Agent Skills publication validation are included. Claims that Prompt Engineer improves downstream execution should be based on actual comparative runs, not inferred from the prompt text alone.
 
 ## Contributing
 
@@ -269,7 +313,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). Release ZIPs include a copy of this license alongside the seven-file skill directory.
 
 ## Acknowledgments and trademarks
 
